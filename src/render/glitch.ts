@@ -72,6 +72,7 @@ export const glitch: Template = {
   bpm: 140,
   music: 'trap',
   swatch: ['#ffe600', '#ff2e88', '#00e5ff'],
+  thumbT: 8.6,
   draw(ctx, t, d, o) {
     const { W, H } = o;
     const u = unit(W, H);
@@ -126,7 +127,7 @@ export const glitch: Template = {
     if (scene === 0) {
       const zp = easeOutBack(seg(T, 0.6, 1.0));
       const z = 1 + 0.08 * hit;
-      const r = 300 * u * zp * z;
+      const r = (W / H > 0.8 ? 230 : 300) * u * zp * z;
       ctx.save();
       ctx.translate(W / 2, H * 0.5);
       ctx.rotate(Math.sin(t * 9) * 0.06);
@@ -143,7 +144,7 @@ export const glitch: Template = {
         ctx.restore();
       }
     } else if (scene === 1) {
-      const r = 300 * u * (1 + 0.04 * hit);
+      const r = (W / H > 0.8 ? 230 : 300) * u * (1 + 0.04 * hit);
       const cy = H * 0.5;
       drawLogo(ctx, d, W / 2, cy, r, { ring: '#000', ringW: 14 * u });
       // glasses drop
@@ -210,7 +211,7 @@ export const glitch: Template = {
         ctx.fillText(ln, 0, 4 * u);
         ctx.restore();
       });
-      if (d.tagline && T > 8.0) {
+      if (d.tagline && T > 8.0 && W / H < 0.8) {
         ctx.save();
         ctx.globalAlpha = seg(T, 8.0, 8.2);
         ctx.font = `800 ${44 * u}px Inter`;

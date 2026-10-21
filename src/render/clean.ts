@@ -1,5 +1,5 @@
 import type { Template, TokenData, RenderOpts } from '../types';
-import { seg, easeOutCubic, easeInOutCubic, easeOutBack, rng, pick, statsOf, fitFont, wrapText, roundRect, drawLogo, shortLink, lerp } from './util';
+import { seg, easeOutCubic, easeInOutCubic, easeOutBack, rng, pick, statsOf, fitFont, fitWrap, wrapText, roundRect, drawLogo, shortLink, lerp } from './util';
 import { unit, footer, watermark, progressBar } from './common';
 
 const INK = '#0f1222';
@@ -124,12 +124,17 @@ export const clean: Template = {
       drawLogo(ctx, d, cx + pad + lr, hy, lr, { square: true });
       ctx.textAlign = 'left';
       const tx = cx + pad + lr * 2 + 36 * u;
-      fitFont(ctx, d.name || 'Token Name', cw - (tx - cx) - pad, 58 * u, (x) => `800 ${x}px Inter`);
+      const nmW = cw - (tx - cx) - pad - 60 * u;
+      let nw = fitWrap(ctx, d.name || 'Token Name', nmW, 1, 58 * u, 40 * u, (x) => `800 ${x}px Inter`);
+      if (ctx.measureText(nw.lines[0] ?? '').width > nmW || (nw.lines[0] ?? '').endsWith('…')) nw = fitWrap(ctx, d.name, nmW, 2, 40 * u, 24 * u, (x) => `800 ${x}px Inter`);
+      ctx.font = `800 ${nw.size}px Inter`;
       ctx.fillStyle = INK;
-      ctx.fillText(d.name || 'Token Name', tx, hy - 30 * u);
-      ctx.font = `700 ${44 * u}px Inter`;
+      const two = nw.lines.length > 1;
+      if (!two) ctx.fillText(nw.lines[0], tx, hy - 30 * u);
+      else nw.lines.forEach((ln, i) => ctx.fillText(ln, tx, hy - 62 * u + i * nw.size * 1.1));
+      fitFont(ctx, ticker, nmW + 40 * u, (two ? 36 : 44) * u, (x) => `700 ${x}px Inter`);
       ctx.fillStyle = ACC;
-      ctx.fillText(ticker, tx, hy + 34 * u);
+      ctx.fillText(ticker, tx, hy + (two ? 44 : 34) * u);
       // live dot
       const blink = 0.5 + 0.5 * Math.sin(t * 6);
       ctx.fillStyle = `rgba(18,183,106,${0.4 + 0.6 * blink})`;

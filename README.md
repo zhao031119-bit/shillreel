@@ -12,9 +12,18 @@ encoded locally with WebCodecs.
 
 ## Features
 
-- **3 templates**: *Pump Hype* (neon chart, sunburst, beat punches, stat cards, coin-flip CTA),
-  *Clean Stats Card* (glass card, self-drawing chart, count-up grid, tap-the-link CTA),
-  *Meme Shake / Glitch* (Impact-style meme captions, deal-with-it glasses, RGB split, slice glitches).
+- **8 templates** (each with its own procedural beat):
+  | id | Template | Look | Beat |
+  |---|---|---|---|
+  | `hype` | Pump Hype | neon chart, sunburst, beat punches, stat cards, coin-flip CTA | 128 BPM house |
+  | `clean` | Clean Stats Card | glass card, self-drawing chart, count-up grid, tap-the-link CTA | 100 BPM lo-fi |
+  | `glitch` | Meme Shake / Glitch | meme captions, deal-with-it glasses, RGB split, slice glitches | 140 BPM trap |
+  | `news` | Breaking News | "BREAKING NEWS" stinger, red/white lower-third, anchor-desk stat panels, ticker crawl | 120 BPM broadcast theme |
+  | `arcade` | Retro Arcade | real pixel-art world (low-res canvas), token as the player coin, HUD score count-up, LEVEL UP high-score table, CRT | 150 BPM chiptune |
+  | `moon` | Moon Mission | T-minus 3-2-1, launch shake, rocket (logo in the window) rides the chart, telemetry, flag on the moon | 90 BPM cinematic |
+  | `lux` | Luxury Gold | black & gold, art-deco frame, serif mask reveals, shimmering gold logo, "The Figures" | 76 BPM lounge |
+  | `terminal` | Terminal / Hacker | typed scan report, ASCII-art logo generated from the real logo, progress bar, matrix rain, ACCESS GRANTED | 132 BPM acid techno |
+- Template picker shows **live thumbnails** rendered with the current token.
 - **Formats**: 9:16 (1080×1920) and 1:1 (1080×1080); 10 / 12 / 15 s.
 - **Remix**: one click re-rolls captions, hooks, chart shapes and colours (seeded, so preview = export).
 - **Auto-fill** from Robinhood Chain testnet (chain id 46630) — see below.
@@ -47,7 +56,9 @@ npm run preview      # serve dist/ on http://localhost:4173
 ```
 
 End-to-end check (needs Python Playwright + Google Chrome):
-`python3 scripts/e2e.py http://localhost:4173/` renders and downloads an MP4 for each template into `samples/`.
+`python3 scripts/e2e.py http://localhost:4173/` renders and downloads an MP4 for every template in 9:16 and 1:1 (plus 10 s / 15 s checks) into `samples/`.
+`python3 scripts/frames.py /tmp/frames` renders contact strips (incl. a very long name/ticker) for eyeballing layouts.
+To add a template: create `src/render/<id>.ts` exporting a `Template`, register it in `src/templates.ts`, and (optionally) add a beat style in `src/music.ts`.
 
 ## Deploy (free static hosting)
 
@@ -74,16 +85,17 @@ No environment variables are needed.
 
 ```
 src/main.ts          UI wiring, preview loop, export flow
-src/render/*.ts      templates (hype, clean, glitch) + shared drawing helpers
+src/render/*.ts      templates (hype, clean, glitch, news, arcade, moon, lux, terminal) + shared helpers
 src/encoder.ts       WebCodecs → mp4-muxer, MediaRecorder fallback
 src/music.ts         procedural beats (OfflineAudioContext)
 src/token.ts         auto-fill (explorer API, JSON-RPC, IPFS)
 src/copy.ts          X post copy generator (+ optional LLM hook, off)
 public/              favicon / logo (SVG)
-scripts/e2e.py       headless render test
+scripts/e2e.py       headless test: auto-fill + MP4 export of every template/format
+scripts/frames.py    contact strips of every template (normal + long-name data) for visual QA
 ```
 
-Fonts: Anton and Inter (SIL Open Font License) via `@fontsource`, bundled locally.
+Fonts: Anton, Inter, Press Start 2P, Playfair Display and JetBrains Mono (all SIL Open Font License) via `@fontsource`, bundled locally.
 
 ## Disclaimer
 

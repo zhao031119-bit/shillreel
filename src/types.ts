@@ -26,7 +26,9 @@ export interface Template {
   name: string;
   blurb: string;
   bpm: number;
-  music: 'hype' | 'chill' | 'trap';
+  music: 'hype' | 'chill' | 'trap' | 'news' | 'chip' | 'epic' | 'lux' | 'cyber';
+  /** normalized (12s) time used for the picker thumbnail */
+  thumbT?: number;
   swatch: string[];
   /** called once per (data, opts) change; may build caches */
   prepare?(data: TokenData, o: RenderOpts): void;

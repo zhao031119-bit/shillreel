@@ -4,6 +4,13 @@ import '@fontsource/inter/600.css';
 import '@fontsource/inter/700.css';
 import '@fontsource/inter/800.css';
 import '@fontsource/inter/900.css';
+import '@fontsource/press-start-2p/400.css';
+import '@fontsource/playfair-display/400.css';
+import '@fontsource/playfair-display/400-italic.css';
+import '@fontsource/playfair-display/700.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/700.css';
+import '@fontsource/jetbrains-mono/800.css';
 import './style.css';
 import type { TokenData, RenderOpts, Template } from './types';
 import { TEMPLATES } from './templates';
@@ -42,6 +49,7 @@ function readForm() {
   data.ticker = data.ticker.replace(/^\$/, '').toUpperCase();
   data.address = extractAddress(data.link) || data.address;
   $('tagCount').textContent = `${data.tagline.length}/110`;
+  thumbsDirty = true;
   refreshCopy();
 }
 for (const f of fields) $(f).addEventListener('input', readForm);
@@ -54,6 +62,7 @@ function setLogoFromBlob(blob: Blob) {
     data.logoW = img.naturalWidth || 512;
     data.logoH = img.naturalHeight || 512;
     $<HTMLImageElement>('logoPrev').src = url;
+    thumbsDirty = true;
   };
   img.src = url;
 }
@@ -104,7 +113,7 @@ for (const t of TEMPLATES) {
   b.type = 'button';
   b.className = 'tpl' + (t === state.tpl ? ' on' : '');
   b.dataset.id = t.id;
-  b.innerHTML = `<div class="sw">${t.swatch.map((c) => `<i style="background:${c}"></i>`).join('')}</div><div><b>${t.name}</b><small>${t.blurb}</small></div>`;
+  b.innerHTML = `<canvas class="thumb" width="108" height="192" style="background:linear-gradient(135deg,${t.swatch.join(',')})"></canvas><div><b>${t.name}</b><small>${t.blurb}</small></div>`;
   b.onclick = () => {
     state.tpl = t;
     tplWrap.querySelectorAll('.tpl').forEach((x) => x.classList.toggle('on', x === b));
@@ -112,6 +121,25 @@ for (const t of TEMPLATES) {
   };
   tplWrap.appendChild(b);
 }
+// live thumbnails rendered with the current token data
+let thumbsDirty = true;
+let lastThumb = 0;
+function drawThumbs(now: number) {
+  if (!thumbsDirty || now - lastThumb < 700) return;
+  thumbsDirty = false;
+  lastThumb = now;
+  tplWrap.querySelectorAll<HTMLButtonElement>('.tpl').forEach((b) => {
+    const tpl = TEMPLATES.find((x) => x.id === b.dataset.id)!;
+    const cv = b.querySelector('canvas')!;
+    const o: RenderOpts = { W: 108, H: 192, duration: 12, seed: state.seed, bpm: tpl.bpm };
+    try {
+      tpl.draw(cv.getContext('2d')!, tpl.thumbT ?? 7, data, o);
+    } catch (e) {
+      console.error(e);
+    }
+  });
+}
+
 function segCtl(id: string, onPick: (v: string) => void) {
   const el = $(id);
   el.querySelectorAll('button').forEach((b) =>
@@ -124,7 +152,7 @@ function segCtl(id: string, onPick: (v: string) => void) {
 segCtl('fmt', (v) => { state.fmt = v as any; sizePreview(); });
 segCtl('dur', (v) => { state.duration = +v; t0 = performance.now(); restartAudio(); });
 $<HTMLInputElement>('music').addEventListener('change', (e) => { state.music = (e.target as HTMLInputElement).checked; restartAudio(); });
-$('shuffle').addEventListener('click', () => { state.seed = Math.floor(Math.random() * 1e6); t0 = performance.now(); restartAudio(); });
+$('shuffle').addEventListener('click', () => { state.seed = Math.floor(Math.random() * 1e6); thumbsDirty = true; t0 = performance.now(); restartAudio(); });
 
 // ---------- preview loop ----------
 const pv = $<HTMLCanvasElement>('preview');
@@ -142,6 +170,7 @@ function frame() {
   const o = opts(PREVIEW_SCALE);
   const t = state.playing ? ((performance.now() - t0) / 1000) % o.duration : pausedAt;
   if (state.playing) pausedAt = t;
+  drawThumbs(performance.now());
   try {
     state.tpl.draw(pctx, t, data, o);
   } catch (e) {
@@ -269,7 +298,10 @@ $('copyBtn').addEventListener('click', async () => {
 async function boot() {
   sizePreview();
   readForm();
-  await Promise.all(['400 40px Anton', '600 20px Inter', '700 20px Inter', '800 20px Inter', '900 20px Inter'].map((f) => document.fonts.load(f)));
+  await Promise.all(
+    ['400 40px Anton', '600 20px Inter', '700 20px Inter', '800 20px Inter', '900 20px Inter', 'italic 900 20px Inter', '400 20px "Press Start 2P"', '400 20px "Playfair Display"', 'italic 400 20px "Playfair Display"', '700 20px "Playfair Display"', '400 20px "JetBrains Mono"', '700 20px "JetBrains Mono"', '800 20px "JetBrains Mono"'].map((f) => document.fonts.load(f).catch(() => []))
+  );
+  thumbsDirty = true;
   requestAnimationFrame(frame);
   const q = new URLSearchParams(location.search);
   const tok = q.get('t') || q.get('token');
@@ -281,4 +313,4 @@ async function boot() {
   if (tp) (tplWrap.querySelector(`[data-id="${tp}"]`) as HTMLButtonElement | null)?.click();
 }
 boot();
-(window as any).shillreel = { renderMusic, state, data };
+(window as any).shillreel = { renderMusic, state, data, TEMPLATES };

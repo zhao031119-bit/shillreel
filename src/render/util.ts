@@ -182,3 +182,38 @@ export function beat(t: number, bpm: number) {
 }
 
 export const FOOTER = 'TESTNET · NOT FINANCIAL ADVICE';
+
+export const statText = (s: Stat, p = 1) => (s.prefix ?? '') + s.fmt(s.value * p) + (s.suffix ?? '');
+
+/** small LRU-ish cache keyed by string */
+export function memo<T>(max = 6) {
+  const m = new Map<string, T>();
+  return (key: string, make: () => T): T => {
+    let v = m.get(key);
+    if (v === undefined) {
+      v = make();
+      m.set(key, v);
+      if (m.size > max) m.delete(m.keys().next().value as string);
+    }
+    return v;
+  };
+}
+
+/** draws text left-aligned, shrinking to fit maxW; returns used font size */
+export function fitText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, size: number, font: (s: number) => string) {
+  const s = fitFont(ctx, text, maxW, size, font);
+  ctx.fillText(text, x, y);
+  return s;
+}
+
+/** finds the largest font size (<= size) at which text wraps into <= maxLines lines without truncation */
+export function fitWrap(ctx: CanvasRenderingContext2D, text: string, maxW: number, maxLines: number, size: number, minSize: number, font: (s: number) => string) {
+  let s = size;
+  for (; s > minSize; s *= 0.92) {
+    ctx.font = font(s);
+    const lines = wrapText(ctx, text, maxW, maxLines + 1);
+    if (lines.length <= maxLines && lines.every((l) => ctx.measureText(l).width <= maxW)) return { lines, size: s };
+  }
+  ctx.font = font(minSize);
+  return { lines: wrapText(ctx, text, maxW, maxLines), size: minSize };
+}

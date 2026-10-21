@@ -33,23 +33,31 @@ with sync_playwright() as p:
     page.wait_for_timeout(300)
     page.screenshot(path=str(OUT / 'ui-desktop.png'))
 
-    jobs = [('hype', '9:16'), ('clean', '9:16'), ('glitch', '9:16'), ('hype', '1:1'), ('clean', '1:1'), ('glitch', '1:1')]
-    for tpl, fmt in jobs:
+    ids = page.evaluate('window.shillreel.TEMPLATES.map(t => t.id)')
+    jobs = [(i, f, 12) for i in ids for f in ('9:16', '1:1')] + [('moon', '9:16', 10), ('terminal', '9:16', 15), ('arcade', '1:1', 15), ('lux', '1:1', 10)]
+    for tpl, fmt, dur in jobs:
         page.click(f'.tpl[data-id="{tpl}"]')
         page.click(f'#fmt button[data-v="{fmt}"]')
+        page.click(f'#dur button[data-v="{dur}"]')
         page.click('#export')
         t = time.time()
         page.wait_for_selector('#exportStatus.ok, #exportStatus.err', timeout=300000)
         st = page.inner_text('#exportStatus')
-        print(tpl, fmt, f'{time.time()-t:.1f}s', st)
+        print(tpl, fmt, dur, f'{time.time()-t:.1f}s', st[:60])
         if 'failed' in st:
             continue
         with page.expect_download() as dl:
             page.click('#dl')
-        name = f"sample-{tpl}-{fmt.replace(':','x')}.mp4"
+        name = f"sample-{tpl}-{fmt.replace(':','x')}.mp4" if dur == 12 else f"test-{tpl}-{fmt.replace(':','x')}-{dur}s.mp4"
         dl.value.save_as(str(OUT / name))
         page.evaluate("document.getElementById('exportStatus').className='hint center'")
     page.click('#fmt button[data-v="9:16"]')
+    page.click('#dur button[data-v="12"]')
+    page.click('.tpl[data-id="moon"]')
+    page.wait_for_timeout(1500)
+    page.evaluate("document.querySelector('.a-style').scrollIntoView()")
+    page.wait_for_timeout(400)
+    page.screenshot(path=str(OUT / 'ui-templates.png'))
     page.evaluate("document.querySelector('.a-stage').scrollIntoView()")
     page.wait_for_timeout(500)
     page.screenshot(path=str(OUT / 'ui-desktop-result.png'))
