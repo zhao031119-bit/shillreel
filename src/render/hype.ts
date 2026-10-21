@@ -3,6 +3,7 @@ import {
   seg, easeOutCubic, easeOutBack, easeInCubic, rng, pick, statsOf, fitFont, wrapText, roundRect, drawLogo, shortLink, beat, lerp, clamp,
 } from './util';
 import { unit, footer, watermark, progressBar, confetti, flash } from './common';
+import { grain, blob, bokeh, vignette, tiltLogo, kinetic, blurRegion } from './fx';
 
 const GREEN = '#39ff88';
 const PINK = '#ff2fd0';
@@ -55,6 +56,14 @@ export const hype: Template = {
     rg.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = rg;
     ctx.fillRect(0, 0, W, H);
+    blob(ctx, W * (0.15 + 0.08 * Math.sin(t * 0.4)), H * 0.2, W * 0.75, 'rgba(120,40,255,0.32)');
+    blob(ctx, W * (0.9 + 0.06 * Math.cos(t * 0.5)), H * 0.6, W * 0.7, 'rgba(255,47,208,0.22)');
+    for (let i = 0; i < 14; i++) {
+      const z = ((i * 0.618) % 1);
+      const bx = (((i * 0.37 + t * 0.02 * (0.5 + z)) % 1.2) - 0.1) * W;
+      const by = ((i * 0.53 + 0.1 * Math.sin(t * 0.6 + i)) % 1) * H;
+      bokeh(ctx, bx, by, (30 + 60 * z) * u, i % 3 ? '57,255,136' : '255,47,208', 0.08 + 0.08 * z);
+    }
 
     // sunburst
     ctx.save();
@@ -140,20 +149,14 @@ export const hype: Template = {
     if (T < 2.4) {
       const pin = seg(T, 0.05, 0.35);
       const pout = seg(T, 2.1, 2.4);
-      const s = lerp(2.4, 1, easeOutCubic(pin));
       ctx.save();
-      ctx.globalAlpha = pin * (1 - pout);
-      ctx.translate(W / 2, H * 0.2);
-      ctx.scale(s, s);
-      ctx.rotate(-0.04);
-      const fs = fitFont(ctx, c.hook, W * 0.86, 150 * u, (x) => `${x}px Anton`);
-      ctx.font = `${fs}px Anton`;
-      ctx.lineWidth = 14 * u;
-      ctx.strokeStyle = '#000';
-      ctx.strokeText(c.hook, 0, 0);
-      ctx.fillStyle = '#fff';
-      ctx.fillText(c.hook, 0, 0);
+      ctx.globalAlpha = 1 - pout;
+      kinetic(ctx, c.hook, W / 2, H * 0.2, T, {
+        font: (x) => `${x}px Anton`, size: 150 * u, maxW: W * 0.86, maxLines: 2, start: 0.05, stagger: 0.09, dur: 0.45, style: 'pop',
+        fill: (i) => (i % 2 ? GREEN : '#fff'), stroke: { color: '#000', w: 14 * u }, shadow: { color: 'rgba(57,255,136,0.6)', blur: 30 * u },
+      });
       ctx.restore();
+      void pin;
 
       const lp = seg(T, 0.45, 1.05);
       if (lp > 0) {
@@ -171,7 +174,7 @@ export const hype: Template = {
         ctx.arc(0, 0, Math.max(0, r + 34 * u), 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
-        if (r > 1) drawLogo(ctx, d, W / 2, H * 0.48, r, { ring: '#fff', ringW: 10 * u });
+        if (r > 1) tiltLogo(ctx, (rr) => drawLogo(ctx, d, 0, 0, rr, { ring: '#fff', ringW: 10 * u }), W / 2, H * 0.48, r, t, { glow: 'rgba(57,255,136,0.7)', glowBlur: 50 * u });
         // "?" tease text
         const qp = seg(T, 1.1, 1.4);
         ctx.save();
@@ -191,11 +194,7 @@ export const hype: Template = {
       const lr = lerp(250, 190, easeOutCubic(pin)) * u;
       ctx.save();
       ctx.globalAlpha = 1 - pout;
-      ctx.save();
-      ctx.shadowColor = GREEN;
-      ctx.shadowBlur = 60 * u * (0.6 + 0.4 * Math.exp(-ph * 4));
-      drawLogo(ctx, d, W / 2, ly, lr, { ring: '#fff', ringW: 9 * u });
-      ctx.restore();
+      tiltLogo(ctx, (rr) => drawLogo(ctx, d, 0, 0, rr, { ring: '#fff', ringW: 9 * u }), W / 2, ly, lr, t, { glow: 'rgba(57,255,136,0.8)', glowBlur: 60 * u * (0.6 + 0.4 * Math.exp(-ph * 4)) });
 
       // ticker per-letter
       const fs = fitFont(ctx, ticker, W * 0.9, 270 * u, (x) => `${x}px Anton`);
@@ -210,10 +209,15 @@ export const hype: Template = {
         const y = H * 0.53 + (1 - p) * 220 * u;
         ctx.save();
         ctx.globalAlpha = clamp(p) * (1 - pout);
+        ctx.fillStyle = 'rgba(255,47,208,0.85)';
+        ctx.fillText(ch, x + 7 * u, y + 7 * u);
         ctx.lineWidth = 16 * u;
         ctx.strokeStyle = '#000';
         ctx.strokeText(ch, x, y);
-        ctx.fillStyle = i === 0 ? GREEN : '#fff';
+        const tg = ctx.createLinearGradient(0, y - fs * 0.5, 0, y + fs * 0.5);
+        tg.addColorStop(0, '#ffffff');
+        tg.addColorStop(1, i === 0 ? GREEN : '#c9ffe0');
+        ctx.fillStyle = i === 0 ? GREEN : tg;
         ctx.fillText(ch, x, y);
         ctx.restore();
         x += w;
@@ -291,13 +295,17 @@ export const hype: Template = {
         const y = y0 + i * (ch + gap);
         const w = W * 0.86;
         ctx.save();
+        if (p > 0.3) blurRegion(ctx, x, y, w, ch, 10, () => roundRect(ctx, x, y, w, ch, 30 * u));
         roundRect(ctx, x, y, w, ch, 30 * u);
         const g = ctx.createLinearGradient(x, y, x + w, y + ch);
         g.addColorStop(0, 'rgba(57,255,136,0.18)');
         g.addColorStop(1, 'rgba(255,47,208,0.12)');
         ctx.fillStyle = g;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(57,255,136,0.7)';
+        const sg = ctx.createLinearGradient(x, y, x + w, y);
+        sg.addColorStop(0, 'rgba(57,255,136,0.9)');
+        sg.addColorStop(1, 'rgba(255,47,208,0.7)');
+        ctx.strokeStyle = sg;
         ctx.lineWidth = 3 * u;
         ctx.stroke();
         const compact = ch < 190 * u;
@@ -362,9 +370,7 @@ export const hype: Template = {
       ctx.save();
       ctx.translate(W / 2, cy);
       ctx.scale(Math.max(0.06, Math.abs(sx)), 1);
-      ctx.shadowColor = GREEN;
-      ctx.shadowBlur = 70 * u;
-      if (r > 1) drawLogo(ctx, d, 0, 0, r, { ring: '#ffd84a', ringW: 16 * u });
+      if (r > 1) tiltLogo(ctx, (rr) => drawLogo(ctx, d, 0, 0, rr, { ring: '#ffd84a', ringW: 16 * u }), 0, 0, r, t, { glow: 'rgba(57,255,136,0.8)', glowBlur: 70 * u, shadow: false });
       ctx.restore();
 
       const bp = easeOutBack(seg(T, 9.7, 10.1));
@@ -379,9 +385,25 @@ export const hype: Template = {
       ctx.shadowColor = GREEN;
       ctx.shadowBlur = 50 * u;
       roundRect(ctx, -bw / 2, -bh / 2, bw, bh, bh / 2);
-      ctx.fillStyle = GREEN;
+      const btn = ctx.createLinearGradient(-bw / 2, 0, bw / 2, 0);
+      btn.addColorStop(0, GREEN);
+      btn.addColorStop(1, '#19e3ff');
+      ctx.fillStyle = btn;
       ctx.fill();
       ctx.shadowBlur = 0;
+      ctx.save();
+      ctx.clip();
+      const sh = ctx.createLinearGradient(0, -bh / 2, 0, 0);
+      sh.addColorStop(0, 'rgba(255,255,255,0.45)');
+      sh.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = sh;
+      ctx.fillRect(-bw / 2, -bh / 2, bw, bh / 2);
+      const sx2 = -bw / 2 + ((t * 0.7) % 1.5) * bw * 1.2 - bw * 0.2;
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.beginPath();
+      ctx.moveTo(sx2, -bh / 2); ctx.lineTo(sx2 + 40 * u, -bh / 2); ctx.lineTo(sx2 - 10 * u, bh / 2); ctx.lineTo(sx2 - 50 * u, bh / 2);
+      ctx.fill();
+      ctx.restore();
       ctx.fillStyle = '#06070c';
       ctx.fillText(label, 0, fs * 0.05);
       ctx.restore();
@@ -409,6 +431,8 @@ export const hype: Template = {
     }
     flash(ctx, W, H, T > 2.3 ? 0.05 * Math.exp(-ph * 9) : 0);
 
+    vignette(ctx, W, H, 0.5, 0.4);
+    grain(ctx, W, H, t, 0.07);
     progressBar(ctx, W, u, t / o.duration, GREEN);
     watermark(ctx, W, H, u);
     footer(ctx, W, H, u);

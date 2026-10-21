@@ -11,6 +11,17 @@ import '@fontsource/playfair-display/700.css';
 import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/700.css';
 import '@fontsource/jetbrains-mono/800.css';
+import '@fontsource/plus-jakarta-sans/600.css';
+import '@fontsource/plus-jakarta-sans/700.css';
+import '@fontsource/plus-jakarta-sans/800.css';
+import '@fontsource/bangers/400.css';
+import '@fontsource/audiowide/400.css';
+import '@fontsource/mr-dafoe/400.css';
+import '@fontsource/fredoka/500.css';
+import '@fontsource/fredoka/700.css';
+import '@fontsource/cinzel/400.css';
+import '@fontsource/cinzel/700.css';
+import '@fontsource/cinzel/900.css';
 import './style.css';
 import type { TokenData, RenderOpts, Template } from './types';
 import { TEMPLATES } from './templates';
@@ -299,7 +310,7 @@ async function boot() {
   sizePreview();
   readForm();
   await Promise.all(
-    ['400 40px Anton', '600 20px Inter', '700 20px Inter', '800 20px Inter', '900 20px Inter', 'italic 900 20px Inter', '400 20px "Press Start 2P"', '400 20px "Playfair Display"', 'italic 400 20px "Playfair Display"', '700 20px "Playfair Display"', '400 20px "JetBrains Mono"', '700 20px "JetBrains Mono"', '800 20px "JetBrains Mono"'].map((f) => document.fonts.load(f).catch(() => []))
+    ['400 40px Anton', '600 20px Inter', '700 20px Inter', '800 20px Inter', '900 20px Inter', 'italic 900 20px Inter', '400 20px "Press Start 2P"', '400 20px "Playfair Display"', 'italic 400 20px "Playfair Display"', '700 20px "Playfair Display"', '400 20px "JetBrains Mono"', '700 20px "JetBrains Mono"', '800 20px "JetBrains Mono"', '600 20px "Plus Jakarta Sans"', '700 20px "Plus Jakarta Sans"', '800 20px "Plus Jakarta Sans"', '400 20px Bangers', '400 20px Audiowide', '400 20px "Mr Dafoe"', '500 20px Fredoka', '700 20px Fredoka', '400 20px Cinzel', '700 20px Cinzel', '900 20px Cinzel'].map((f) => document.fonts.load(f).catch(() => []))
   );
   thumbsDirty = true;
   requestAnimationFrame(frame);

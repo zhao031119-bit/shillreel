@@ -26,7 +26,7 @@ export interface Template {
   name: string;
   blurb: string;
   bpm: number;
-  music: 'hype' | 'chill' | 'trap' | 'news' | 'chip' | 'epic' | 'lux' | 'cyber';
+  music: import('./music').MusicStyle;
   /** normalized (12s) time used for the picker thumbnail */
   thumbT?: number;
   swatch: string[];

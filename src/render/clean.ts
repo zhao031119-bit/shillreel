@@ -1,6 +1,7 @@
 import type { Template, TokenData, RenderOpts } from '../types';
 import { seg, easeOutCubic, easeInOutCubic, easeOutBack, rng, pick, statsOf, fitFont, fitWrap, wrapText, roundRect, drawLogo, shortLink, lerp } from './util';
 import { unit, footer, watermark, progressBar } from './common';
+import { grain, blob as fxBlob, tiltLogo, spring, p01, kinetic, easeOutExpo } from './fx';
 
 const INK = '#0f1222';
 const ACC = '#6c4dff';
@@ -29,11 +30,7 @@ function prep(d: TokenData, o: RenderOpts) {
 }
 
 function blob(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, col: string) {
-  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-  g.addColorStop(0, col);
-  g.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = g;
-  ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  fxBlob(ctx, x, y, r, col);
 }
 
 export const clean: Template = {
@@ -90,6 +87,25 @@ export const clean: Template = {
         ctx.restore();
       });
       ctx.restore();
+      if (!sq) {
+        const fp = spring(p01(T, 0.9, 1.9) * 1.25, 7, 4.5) * (1 - out);
+        if (fp > 0.01) {
+          ctx.save();
+          ctx.globalAlpha = Math.min(1, fp);
+          tiltLogo(ctx, (rr) => drawLogo(ctx, d, 0, 0, rr, { square: true }), W * 0.68, H * 0.8 - out * 200 * u, 130 * u * fp, t, { tilt: 0.25, glow: 'rgba(108,77,255,0.45)', glowBlur: 60 * u });
+          ctx.restore();
+          ctx.save();
+          ctx.globalAlpha = Math.min(1, fp) * 0.9;
+          ctx.font = `800 ${30 * u}px Inter`;
+          ctx.textAlign = 'right';
+          ctx.fillStyle = INK;
+          ctx.fillText(ticker, W * 0.68 - 170 * u, H * 0.8 - 20 * u - out * 200 * u);
+          ctx.font = `600 ${24 * u}px Inter`;
+          ctx.fillStyle = UP;
+          ctx.fillText('● live on vibe/vibe', W * 0.68 - 170 * u, H * 0.8 + 22 * u - out * 200 * u);
+          ctx.restore();
+        }
+      }
     }
 
     // card phase
@@ -244,17 +260,11 @@ export const clean: Template = {
       ctx.textAlign = 'center';
       const lr = 150 * u * p;
       if (lr > 1) {
-        ctx.save();
-        ctx.shadowColor = 'rgba(40,30,120,0.3)';
-        ctx.shadowBlur = 50 * u;
-        drawLogo(ctx, d, W / 2, H * 0.3, lr, { square: true });
-        ctx.restore();
+        tiltLogo(ctx, (rr) => drawLogo(ctx, d, 0, 0, rr, { square: true }), W / 2, H * 0.3, lr, t, { tilt: 0.2, glow: 'rgba(108,77,255,0.4)', glowBlur: 60 * u });
       }
-      ctx.globalAlpha = seg(T, 9.7, 10.0);
       const line1 = c.cta + ' ' + ticker;
-      fitFont(ctx, line1, W * 0.84, 120 * u, (x) => `900 ${x}px Inter`);
-      ctx.fillStyle = INK;
-      ctx.fillText(line1, W / 2, H * 0.3 + 250 * u);
+      kinetic(ctx, line1, W / 2, H * 0.3 + 250 * u, T, { font: (x) => `900 ${x}px Inter`, size: 120 * u, maxW: W * 0.84, maxLines: 1, start: 9.7, stagger: 0.1, dur: 0.6, style: 'rise', fill: (i) => (i ? ACC : INK) });
+      ctx.globalAlpha = easeOutExpo(seg(T, 9.9, 10.3));
       ctx.font = `600 ${46 * u}px Inter`;
       ctx.fillStyle = 'rgba(15,18,34,0.6)';
       ctx.fillText('on vibe/vibe', W / 2, H * 0.3 + 350 * u);
@@ -277,6 +287,14 @@ export const clean: Template = {
       ctx.fillStyle = g;
       ctx.fill();
       ctx.shadowBlur = 0;
+      ctx.save();
+      ctx.clip();
+      const shx = -bw / 2 + ((t * 0.6) % 1.6) * bw - bw * 0.1;
+      ctx.fillStyle = 'rgba(255,255,255,0.28)';
+      ctx.beginPath();
+      ctx.moveTo(shx, -bh / 2); ctx.lineTo(shx + 50 * u, -bh / 2); ctx.lineTo(shx, bh / 2); ctx.lineTo(shx - 50 * u, bh / 2);
+      ctx.fill();
+      ctx.restore();
       ctx.fillStyle = '#fff';
       ctx.fillText(link, 0, 2 * u);
       ctx.restore();
@@ -313,6 +331,7 @@ export const clean: Template = {
       ctx.restore();
     }
 
+    grain(ctx, W, H, t, 0.045);
     progressBar(ctx, W, u, t / o.duration, ACC, 'rgba(15,18,34,0.1)');
     watermark(ctx, W, H, u, true);
     footer(ctx, W, H, u, 'rgba(15,18,34,0.45)');

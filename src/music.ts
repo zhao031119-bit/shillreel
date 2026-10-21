@@ -1,5 +1,5 @@
 // Tiny procedural beat generator (WebAudio OfflineAudioContext). No samples, no licenses needed.
-export type MusicStyle = 'hype' | 'chill' | 'trap' | 'news' | 'chip' | 'epic' | 'lux' | 'cyber';
+export type MusicStyle = 'hype' | 'chill' | 'trap' | 'news' | 'chip' | 'epic' | 'lux' | 'cyber' | 'liquid' | 'anime' | 'vapor' | 'bubble' | 'trailer';
 
 const SR = 48000;
 const midi = (n: number) => 440 * Math.pow(2, (n - 69) / 12);
@@ -7,7 +7,7 @@ const midi = (n: number) => 440 * Math.pow(2, (n - 69) / 12);
 export async function renderMusic(style: MusicStyle, bpm: number, duration: number, seed = 1): Promise<AudioBuffer> {
   const ctx = new OfflineAudioContext(2, Math.ceil(SR * duration), SR);
   const master = ctx.createGain();
-  const mg = style === 'chip' ? 1.9 : style === 'lux' ? 1.4 : 0.9;
+  const mg = style === 'chip' ? 1.9 : style === 'lux' ? 1.4 : style === 'liquid' ? 1.2 : 0.9;
   master.gain.value = mg;
   const comp = ctx.createDynamicsCompressor();
   comp.threshold.value = -14;
@@ -238,6 +238,116 @@ export async function renderMusic(style: MusicStyle, bpm: number, duration: numb
       tone(t, roots[bar] + line[st] + 12, s16 * 0.9, 'sawtooth', 0.14, cut, 0, 0.003, 9);
       if (st === 15 && bar % 2) tone(t, 96, s16, 'square', 0.03, 9000);
     }
+  } else if (style === 'liquid') {
+    // smooth future-pop: F C Dm Bb, soft kick, clap, airy chords, pluck arp
+    const prog = [[53, 57, 60, 64], [48, 52, 55, 59], [50, 53, 57, 60], [46, 50, 53, 57]];
+    const roots = [41, 36, 38, 34];
+    for (let i = 0; i < steps; i++) {
+      const t = i * s16;
+      const bar = Math.floor(i / 16) % 4;
+      const st = i % 16;
+      if (st === 0 || st === 10) kick(t, 120, 45, 0.35, 0.75);
+      if (st === 4 || st === 12) { noiseHit(t, 'bandpass', 1400, 0.16, 0.3, 1.2); noiseHit(t + 0.012, 'bandpass', 1600, 0.12, 0.2, 1.2); }
+      if (st % 2 === 1) hat(t, 0.035);
+      if (st === 0) for (const n of prog[bar]) { tone(t, n + 12, s16 * 15, 'sawtooth', 0.022, 1600, -10, 0.25); tone(t, n + 12, s16 * 15, 'sawtooth', 0.022, 1600, 10, 0.25); }
+      if (st % 3 === 0) tone(t, prog[bar][(i / 3) % 4 | 0] + 24, s16 * 1.8, 'triangle', 0.06, 5000);
+      if (st % 4 === 0) tone(t, roots[bar] - 12 + 12, s16 * 3.6, 'sine', 0.26, 600, 0, 0.01);
+    }
+  } else if (style === 'anime') {
+    // J-rock: E minor power chords Em C D B, driving 8ths
+    const roots = [40, 36, 38, 35];
+    for (let i = 0; i < steps; i++) {
+      const t = i * s16;
+      const bar = Math.floor(i / 16) % 4;
+      const st = i % 16;
+      if (st % 8 === 0 || st === 6 || st === 11) kick(t, 140, 45, 0.25, 0.85);
+      if (st === 4 || st === 12) snare(t, 0.55);
+      if (st % 2 === 0) hat(t, st % 4 === 2 ? 0.1 : 0.06);
+      if (st % 2 === 0) {
+        const r = roots[bar];
+        for (const n of [r, r + 7, r + 12]) { tone(t, n, s16 * 1.7, 'sawtooth', 0.045, 2200, -12, 0.003, 1.5); tone(t, n, s16 * 1.7, 'square', 0.03, 1800, 12, 0.003, 1.5); }
+        tone(t, r - 12, s16 * 1.6, 'sawtooth', 0.12, 700);
+      }
+      if (st === 0 && bar === 0) noiseHit(t, 'highpass', 5000, 0.9, 0.12);
+      // lead hook
+      const lead = [71, 0, 74, 0, 76, 0, 74, 71, 0, 69, 0, 71, 0, 67, 0, 69];
+      if (bar % 2 === 1 && lead[st]) tone(t, lead[st], s16 * 1.5, 'square', 0.035, 4500);
+    }
+  } else if (style === 'vapor') {
+    // synthwave: Am F C G, gated snare, saw arp bass, warm pad
+    const prog = [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]];
+    const roots = [33, 29, 36, 31];
+    for (let i = 0; i < steps; i++) {
+      const t = i * s16;
+      const bar = Math.floor(i / 16) % 4;
+      const st = i % 16;
+      if (st % 4 === 0) kick(t, 130, 45, 0.4, 0.8);
+      if (st === 4 || st === 12) { noiseHit(t, 'bandpass', 1800, 0.32, 0.45, 0.6); noiseHit(t, 'lowpass', 900, 0.18, 0.2, 0.6); }
+      if (st % 2 === 0) hat(t, 0.05);
+      tone(t, roots[bar] + (st % 2 ? 12 : 0) + 12, s16 * 0.9, 'sawtooth', 0.08, 1100, 0, 0.003, 2);
+      if (st === 0) for (const n of prog[bar]) { tone(t, n + 12, s16 * 15.5, 'sawtooth', 0.02, 2200, -9, 0.4); tone(t, n + 12, s16 * 15.5, 'sawtooth', 0.02, 2200, 9, 0.4); }
+      if (st === 0 || st === 6 || st === 10) tone(t, prog[bar][st === 0 ? 2 : st === 6 ? 1 : 0] + 24, s16 * 2.5, 'square', 0.025, 3200);
+    }
+  } else if (style === 'bubble') {
+    // bubblegum pop: C G Am F, bouncy bass, claps, sparkly bells
+    const prog = [[60, 64, 67], [55, 59, 62], [57, 60, 64], [53, 57, 60]];
+    const roots = [36, 31, 33, 29];
+    for (let i = 0; i < steps; i++) {
+      const t = i * s16;
+      const bar = Math.floor(i / 16) % 4;
+      const st = i % 16;
+      if (st % 4 === 0) kick(t, 150, 50, 0.28, 0.8);
+      if (st === 4 || st === 12) { noiseHit(t, 'bandpass', 1500, 0.14, 0.32, 1.1); noiseHit(t + 0.01, 'bandpass', 1800, 0.1, 0.22, 1.1); }
+      if (st % 2 === 1) hat(t, 0.05);
+      if (st === 0 || st === 3 || st === 8 || st === 11 || st === 14) tone(t, roots[bar] + 12 + (st === 14 ? 12 : 0), s16 * 1.5, 'square', 0.08, 1200);
+      if (st === 2 || st === 6 || st === 10) for (const n of prog[bar]) tone(t, n + 12, s16 * 1.2, 'square', 0.025, 3000);
+      const bell = [0, 2, 1, 2];
+      if (st % 4 === 0) tone(t, prog[bar][bell[(st / 4) | 0]] + 24, s16 * 3, 'sine', 0.07, 9000);
+      if (st % 4 === 0) tone(t, prog[bar][bell[(st / 4) | 0]] + 36, s16 * 1.5, 'sine', 0.025, 9000);
+    }
+  } else if (style === 'trailer') {
+    // trailer: drone + ticking + BRAAM hits on the cuts + riser into the final title
+    const k = duration / 12;
+    const cuts = [0, 1.6, 3.6, 5, 7.4, 8.6, 9.6].map((c) => c * k);
+    const drone = (t0: number, len: number, note: number, vol: number) => {
+      for (const dt of [-7, 0, 7]) tone(t0, note, len, 'sawtooth', vol, 500, dt, len * 0.4, 1);
+    };
+    drone(0, duration, 26, 0.05);
+    cuts.forEach((c, i) => {
+      const big = i === 0 || i === 2 || i === 6;
+      // BRAAM: low brass-ish stack + sub hit + noise boom
+      for (const n of [26, 33, 38]) { tone(c, n, big ? 2.2 : 1.2, 'sawtooth', big ? 0.09 : 0.06, big ? 900 : 700, -6, 0.02, 1.2); tone(c, n, big ? 2.2 : 1.2, 'sawtooth', big ? 0.09 : 0.06, big ? 900 : 700, 6, 0.02, 1.2); }
+      kick(c, 90, 30, big ? 1.6 : 0.9, 1);
+      noiseHit(c, 'lowpass', 300, big ? 1.4 : 0.7, 0.6, 0.7);
+    });
+    // ticking
+    for (let i = 0; i < steps; i++) {
+      const t = i * s16;
+      if (t > cuts[4] && t < cuts[6] && i % 2 === 0) hat(t, 0.08);
+      else if (i % 4 === 0) noiseHit(t, 'bandpass', 3500, 0.03, 0.12, 6);
+      if (t > cuts[4] && t < cuts[6] && i % 4 === 0) tom(t, 110, 0.5);
+    }
+    // riser before final
+    const rs = cuts[5], re = cuts[6];
+    {
+      const s = ctx.createBufferSource();
+      s.buffer = noise;
+      s.loop = true;
+      const f = ctx.createBiquadFilter();
+      f.type = 'bandpass';
+      f.Q.value = 2;
+      f.frequency.setValueAtTime(400, rs);
+      f.frequency.exponentialRampToValueAtTime(6000, re);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, rs);
+      g.gain.exponentialRampToValueAtTime(0.35, re - 0.02);
+      g.gain.linearRampToValueAtTime(0, re);
+      s.connect(f).connect(g).connect(master);
+      s.start(rs);
+      s.stop(re + 0.05);
+    }
+    // final shimmer chord
+    for (const n of [62, 65, 69, 74]) tone(cuts[6] + 0.1, n, 2.5 * k, 'triangle', 0.04, 5000, 0, 0.3);
   } else {
     // trap, half-time, C minor: Cm Ab Eb Bb
     const roots = [36, 32, 39, 34];

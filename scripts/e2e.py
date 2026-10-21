@@ -34,7 +34,8 @@ with sync_playwright() as p:
     page.screenshot(path=str(OUT / 'ui-desktop.png'))
 
     ids = page.evaluate('window.shillreel.TEMPLATES.map(t => t.id)')
-    jobs = [(i, f, 12) for i in ids for f in ('9:16', '1:1')] + [('moon', '9:16', 10), ('terminal', '9:16', 15), ('arcade', '1:1', 15), ('lux', '1:1', 10)]
+    jobs = [(i, f, 12) for i in ids for f in ('9:16', '1:1')] + [('moon', '9:16', 10), ('terminal', '9:16', 15), ('arcade', '1:1', 15), ('lux', '1:1', 10),
+        ('trailer', '9:16', 10), ('vapor', '1:1', 15), ('y2k', '9:16', 15), ('anime', '1:1', 10), ('liquid', '9:16', 15)]
     for tpl, fmt, dur in jobs:
         page.click(f'.tpl[data-id="{tpl}"]')
         page.click(f'#fmt button[data-v="{fmt}"]')
@@ -53,7 +54,7 @@ with sync_playwright() as p:
         page.evaluate("document.getElementById('exportStatus').className='hint center'")
     page.click('#fmt button[data-v="9:16"]')
     page.click('#dur button[data-v="12"]')
-    page.click('.tpl[data-id="moon"]')
+    page.click('.tpl[data-id="vapor"]')
     page.wait_for_timeout(1500)
     page.evaluate("document.querySelector('.a-style').scrollIntoView()")
     page.wait_for_timeout(400)
