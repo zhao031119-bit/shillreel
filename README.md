@@ -62,6 +62,7 @@ npm run preview      # serve dist/ on http://localhost:4173
 
 End-to-end check (needs Python Playwright + Google Chrome):
 `python3 scripts/e2e.py http://localhost:4173/` renders and downloads an MP4 for every template in 9:16 and 1:1 (plus 10 s / 15 s checks) into `samples/`.
+`scripts/strips.sh` rebuilds `samples/frames/*-strip.png` from the sample MP4s; `python3 scripts/ui_templates.py` re-shoots the picker screenshot.
 `python3 scripts/frames.py /tmp/frames [id,id]` renders contact strips (incl. a very long name/ticker) for eyeballing layouts; `python3 scripts/one.py <id> <9:16|1:1> <T,...> [long]` renders single full-res frames.
 To add a template: create `src/render/<id>.ts` exporting a `Template`, register it in `src/templates.ts`, and (optionally) add a beat style in `src/music.ts`.
 
