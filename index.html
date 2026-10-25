@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Shillreel — promo clips for vibe/vibe tokens</title>
+  <meta name="description" content="Turn any vibe/vibe token into a scroll-stopping 9:16 promo video for X in seconds. Free, runs entirely in your browser." />
+  <meta name="theme-color" content="#0b0d14" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <meta property="og:title" content="Shillreel — promo clips for vibe/vibe tokens" />
+  <meta property="og:description" content="Paste a token, pick a template, get an MP4 for X. Free & in-browser." />
+  <script type="module" crossorigin src="./assets/index-CfZrWLRD.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CT9J4Pkg.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="./"><img src="./logo.svg" alt="" width="34" height="34" /><span>shillreel</span></a>
+    <span class="tag">Promo clips for vibe/vibe tokens · free · in your browser</span>
+  </header>
+
+  <main class="layout">
+      <div class="card a-token">
+        <h2><span class="num">1</span> Token</h2>
+        <label class="lbl" for="src">Paste a vibe/vibe token link or contract address</label>
+        <div class="row">
+          <input id="src" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://testnet.vibevibe.fun/token/0x…" />
+          <button id="fill" class="btn">Auto-fill</button>
+        </div>
+        <p id="fillStatus" class="hint">Reads name, ticker, holders, logo & description from Robinhood Chain testnet. Or fill in manually ↓</p>
+        <div class="grid2">
+          <div><label class="lbl" for="name">Name</label><input id="name" maxlength="40" placeholder="Hedgehog Hustle" /></div>
+          <div><label class="lbl" for="ticker">Ticker</label><input id="ticker" maxlength="12" placeholder="HDGE" /></div>
+        </div>
+        <label class="lbl">Logo</label>
+        <div class="logoRow">
+          <img id="logoPrev" alt="" />
+          <label class="btn ghost file">Upload image<input id="logo" type="file" accept="image/*" hidden /></label>
+          <button id="logoClear" class="btn ghost small" type="button">Remove</button>
+        </div>
+        <label class="lbl" for="tagline">Tagline <span class="muted" id="tagCount"></span></label>
+        <textarea id="tagline" rows="2" maxlength="110" placeholder="Small, spiky and always busy."></textarea>
+        <details class="more" open>
+          <summary>Stats (optional — shown as animated count-ups)</summary>
+          <div class="grid2">
+            <div><label class="lbl" for="mcap">Market cap ($)</label><input id="mcap" inputmode="decimal" placeholder="1.2M" /></div>
+            <div><label class="lbl" for="holders">Holders</label><input id="holders" inputmode="numeric" placeholder="6787" /></div>
+            <div><label class="lbl" for="price">Price ($)</label><input id="price" inputmode="decimal" placeholder="0.00042" /></div>
+            <div><label class="lbl" for="change">24h change (%)</label><input id="change" inputmode="decimal" placeholder="+38" /></div>
+          </div>
+        </details>
+        <label class="lbl" for="link">Link shown in the video & post</label>
+        <input id="link" type="url" placeholder="https://testnet.vibevibe.fun/token/0x…" />
+      </div>
+      <div class="card a-style">
+        <h2><span class="num">2</span> Style</h2>
+        <div id="templates" class="tpls"></div>
+        <div class="opts">
+          <div class="seg" id="fmt">
+            <button data-v="9:16" class="on">9:16</button><button data-v="1:1">1:1</button>
+          </div>
+          <div class="seg" id="dur">
+            <button data-v="10">10s</button><button data-v="12" class="on">12s</button><button data-v="15">15s</button>
+          </div>
+          <label class="chk"><input id="music" type="checkbox" checked /> Beat (synth)</label>
+          <button id="shuffle" class="btn ghost small" type="button">🎲 Remix captions</button>
+        </div>
+      </div>
+      <div class="card a-stage">
+        <h2><span class="num">3</span> Preview & export</h2>
+        <div class="canvasWrap" id="canvasWrap"><canvas id="preview"></canvas></div>
+        <div class="row center">
+          <button id="play" class="btn ghost small" type="button">⏸ Pause</button>
+          <button id="sound" class="btn ghost small" type="button">🔇 Sound off</button>
+        </div>
+        <button id="export" class="btn big">⚡ Generate MP4</button>
+        <div id="progress" class="progress" hidden><div></div></div>
+        <p id="exportStatus" class="hint center"></p>
+        <div id="result" hidden>
+          <video id="out" controls playsinline loop></video>
+          <div class="row wrap center">
+            <a id="dl" class="btn" download>⬇ Download</a>
+            <button id="share" class="btn ghost" type="button" hidden>Share…</button>
+            <a id="toX" class="btn ghost" target="_blank" rel="noopener">Post on X ↗</a>
+          </div>
+          <p class="hint center">On X: paste the copy, then attach the downloaded video.</p>
+        </div>
+      </div>
+      <div class="card a-copy">
+        <h2><span class="num">4</span> Post copy for X</h2>
+        <textarea id="copy" rows="7"></textarea>
+        <div class="row between">
+          <span class="hint" id="copyLen"></span>
+          <span class="row">
+            <button id="regen" class="btn ghost small" type="button">🎲 New copy</button>
+            <button id="copyBtn" class="btn ghost small" type="button">Copy</button>
+          </span>
+        </div>
+      </div>
+  </main>
+
+  <footer class="foot">
+    <p>Shillreel is an independent tool, not affiliated with vibe/vibe or Robinhood. Testnet tokens have no monetary value. Nothing here is financial advice.
+    Everything renders locally in your browser — no uploads, no accounts.</p>
+  </footer>
+</body>
+</html>
